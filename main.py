@@ -35,6 +35,10 @@ def filter_keys(d, l):
     return {k: d[k] for k in l if k in d}
 
 
+def simple_record(record):
+    return filter_keys(record, ['content', 'name', 'type'])
+
+
 def clear_dead_records(cf, zone):
     dns_records = filler_A_root_records(cf, zone)
 
@@ -44,7 +48,7 @@ def clear_dead_records(cf, zone):
         if subprocess.run(['ping', '-W', '1', '-c', '1', ip], capture_output=True).returncode != 0:
             record_id = record['id']
             cf.zones.dns_records.delete(zone_id, record_id)
-            pretty_record = filter_keys(record, ['content', 'name', 'type'])
+            pretty_record = simple_record(record)
             logger.info(f"Deleted stale {pretty_record} record.")
 
 
