@@ -44,9 +44,7 @@ def clear_dead_records(cf, zone, dns_records):
 
 
 def record_exists(new_record, dns_records):
-    occurences = [record for record in dns_records
-                  if record['name'] == new_record['name'] and record['content'] == new_record['content']]
-    return len(occurences) != 0
+    return any(record['name'] == new_record['name'] and record['content'] == new_record['content'] for record in dns_records)
 
 
 def add_record(cf, zone, ip, existing_records):
