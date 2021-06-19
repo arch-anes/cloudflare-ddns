@@ -23,16 +23,21 @@ def is_A_record(record):
     return record['type'] == 'A'
 
 
-def filler_A_root_records(domain_name, records):
+def filler_A_root_records(cf, zone):
+    zone_id, zone_name = zone['id'], zone['name']
+
+    records = cf.zones.dns_records.get(zone_id)
     return [record for record in records
-            if is_A_record(record) and record['name'] == domain_name]
+            if is_A_record(record) and record['name'] == zone_name]
 
 
 def filter_keys(d, l):
     return {k: d[k] for k in l if k in d}
 
 
-def clear_dead_records(cf, zone, dns_records):
+def clear_dead_records(cf, zone):
+    dns_records = filler_A_root_records(cf, zone)
+
     zone_id = zone['id']
     for record in dns_records:
         ip = record['content']
@@ -47,7 +52,9 @@ def record_exists(new_record, dns_records):
     return any(record['name'] == new_record['name'] and record['content'] == new_record['content'] for record in dns_records)
 
 
-def add_record(cf, zone, ip, existing_records):
+def add_record(cf, zone, ip):
+    existing_records = filler_A_root_records(cf, zone)
+
     zone_id, zone_name = zone['id'], zone['name']
     new_record = {'name': zone_name, 'type': 'A', 'content': ip}
 
@@ -68,12 +75,8 @@ def main():
         logger.warning("No zones found.")
 
     for zone in zones:
-        zone_id, zone_name = zone['id'], zone['name']
-        dns_records = cf.zones.dns_records.get(zone_id)
-        dns_records = filler_A_root_records(zone_name, dns_records)
-
-        clear_dead_records(cf, zone, dns_records)
-        add_record(cf, zone, ip, dns_records)
+        clear_dead_records(cf, zone)
+        add_record(cf, zone, ip)
 
 
 if __name__ == '__main__':
