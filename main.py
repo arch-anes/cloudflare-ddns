@@ -10,6 +10,7 @@ import CloudFlare
 
 zone_filters = [element.strip() for element in os.environ.get('ZONES', '').split(sep=',')]
 delay = int(os.environ.get('DELAY', '300'))
+unique = os.environ.get('UNIQUE', 'no').strip() == 'yes'
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
 logger = logging.getLogger('ddns')
@@ -37,6 +38,19 @@ def filter_keys(d, l):
 
 def simple_record(record):
     return filter_keys(record, ['content', 'name', 'type'])
+
+
+def clear_other_records(cf, zone, ip):
+    dns_records = filler_A_root_records(cf, zone)
+
+    zone_id = zone['id']
+    for record in dns_records:
+        record_ip = record['content']
+        if record_ip != ip:
+            record_id = record['id']
+            cf.zones.dns_records.delete(zone_id, record_id)
+            pretty_record = simple_record(record)
+            logger.info(f"Deleted {pretty_record} record.")
 
 
 def clear_dead_records(cf, zone):
@@ -79,7 +93,10 @@ def main():
         logger.warning("No zones found.")
 
     for zone in zones:
-        clear_dead_records(cf, zone)
+        if unique:
+            clear_other_records(cf, zone, ip)
+        else:
+            clear_dead_records(cf, zone)
         add_record(cf, zone, ip)
 
 
