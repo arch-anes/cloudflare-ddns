@@ -104,6 +104,6 @@ if __name__ == '__main__':
     while True:
         try:
             main()
-        except e:
+        except Exception as e:
             logger.error(e)
         time.sleep(delay)
