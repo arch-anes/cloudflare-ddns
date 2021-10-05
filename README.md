@@ -8,6 +8,7 @@ variable refresh rate and Docker Secret supports.
 - `CF_API_KEY`: Cloudflare API token 
 - `CF_API_KEY_FILE`: Cloudflare API token stored in a file (for Docker Secret)
 - `ZONES`: Cloudflare zones separated with commas (ex: `example.com, example.ca`)
+- `A_RECORD_NAME`: A record name to write on update (default `@` aka root)
 - `DELAY`: delay between each check (default `300` seconds)
 - `UNIQUE`: delete all other root A records except this one (default `no`)
 
