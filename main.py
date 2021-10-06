@@ -9,6 +9,11 @@ import subprocess
 import CloudFlare
 
 zone_filters = [element.strip() for element in os.environ.get('ZONES', '').split(sep=',')]
+
+a_record_name = os.environ.get('A_RECORD_NAME', '@')
+if a_record_name == '@':
+    a_record_name = None
+
 delay = int(os.environ.get('DELAY', '300'))
 unique = os.environ.get('UNIQUE', 'no').strip() == 'yes'
 
@@ -29,7 +34,7 @@ def filler_A_root_records(cf, zone):
 
     records = cf.zones.dns_records.get(zone_id)
     return [record for record in records
-            if is_A_record(record) and record['name'] == zone_name]
+            if is_A_record(record) and record['name'] == (a_record_name or zone_name)]
 
 
 def filter_keys(d, l):
@@ -74,7 +79,7 @@ def add_record(cf, zone, ip):
     existing_records = filler_A_root_records(cf, zone)
 
     zone_id, zone_name = zone['id'], zone['name']
-    new_record = {'name': zone_name, 'type': 'A', 'content': ip}
+    new_record = {'name': a_record_name or zone_name, 'type': 'A', 'content': ip}
 
     if not record_exists(new_record, existing_records):
         cf.zones.dns_records.post(zone_id, data=new_record)
